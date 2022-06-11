@@ -32,12 +32,10 @@
     "jimp": "^0.16.1",
     "rimraf": "^3.0.2",
     "lodash": "^4.17.15"
-<<<<<<< HEAD
-=======
+
   },
   "engines": {
     "node": "12.22.12",
     "npm": "8.11.0"
->>>>>>> 6eb409b (Project deployed)
   }
 }
