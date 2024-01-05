@@ -1,39 +1,35 @@
 import fs from "fs";
-import Jimp = require("jimp");
+import Jimp from "jimp";
+import path from "path";
+import { promisify } from "util";
 
-// filterImageFromURL
-// helper function to download, filter, and save the filtered image locally
-// returns the absolute path to the local image
-// INPUTS
-//    inputURL: string - a publicly accessible url to an image file
-// RETURNS
-//    an absolute path to a filtered image locally saved file
+// Function to filter image from URL and save it locally
 export async function filterImageFromURL(inputURL: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const photo = await Jimp.read(inputURL);
-      const outpath =
-        "/tmp/filtered." + Math.floor(Math.random() * 2000) + ".jpg";
-      await photo
-        .resize(256, 256) // resize
-        .quality(60) // set JPEG quality
-        .greyscale() // set greyscale
-        .write(__dirname + outpath, (img) => {
-          resolve(__dirname + outpath);
-        });
-    } catch (error) {
-      reject(error);
-    }
-  });
+  const unlink = promisify(fs.unlink);
+
+  try {
+    const photo = await Jimp.read(inputURL);
+    const outputPath = path.join(__dirname, `/tmp/filtered.${Math.floor(Math.random() * 2000)}.jpg`);
+    
+    await photo
+      .resize(256, 256) // Resize
+      .quality(60) // Set JPEG quality
+      .greyscale() // Set greyscale
+      .writeAsync(outputPath); // Write the image asynchronously
+    
+    return outputPath;
+  } catch (error) {
+    throw new Error(`Error processing image: ${error.message}`);
+  }
 }
 
-// deleteLocalFiles
-// helper function to delete files on the local disk
-// useful to cleanup after tasks
-// INPUTS
-//    files: Array<string> an array of absolute paths to files
-export async function deleteLocalFiles(files: Array<string>) {
-  for (let file of files) {
-    fs.unlinkSync(file);
+// Function to delete local files
+export async function deleteLocalFiles(files: string[]): Promise<void> {
+  const unlinkPromises = files.map(file => promisify(fs.unlink)(file));
+
+  try {
+    await Promise.all(unlinkPromises);
+  } catch (error) {
+    throw new Error(`Error deleting files: ${error.message}`);
   }
 }
